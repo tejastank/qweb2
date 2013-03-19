@@ -422,6 +422,7 @@ QWeb2.Element = (function() {
         this._indent = 1;
         this.process_children = true;
         var childs = this.node.childNodes;
+        this.attr_regexp = new RegExp("^" + this.engine.prefix + "-(.+)");
         if (childs) {
             for (var i = 0, ilen = childs.length; i < ilen; i++) {
                 //this.children.push(new QWeb2.Element(this.engine, childs[i]));
@@ -435,7 +436,7 @@ QWeb2.Element = (function() {
             for (var j = 0, jlen = attrs.length; j < jlen; j++) {
                 var attr = attrs[j];
                 var name = attr.name;
-                var m = name.match(new RegExp("^" + this.engine.prefix + "-(.+)"));
+                var m = name.match(this.attr_regexp);
                 if (m) {
                     name = m[1];
                     if (name === 'name') {
