@@ -5,7 +5,7 @@
 var QWeb2 = {
     expressions_cache: {},
     RESERVED_WORDS: 'true,false,NaN,null,undefined,debugger,console,window,in,instanceof,new,function,return,this,typeof,eval,void,Math,RegExp,Array,Object,Date'.split(','),
-    ACTIONS_PRECEDENCE: 'foreach,if,call,set,esc,escf,raw,rawf,js,debug,log'.split(','),
+    ACTIONS_PRECEDENCE: 'foreach,if,elseif,else,call,set,esc,escf,raw,rawf,js,debug,log'.split(','),
     WORD_REPLACEMENT: {
         'and': '&&',
         'or': '||',
@@ -424,7 +424,10 @@ QWeb2.Element = (function() {
         var childs = this.node.childNodes;
         if (childs) {
             for (var i = 0, ilen = childs.length; i < ilen; i++) {
-                this.children.push(new QWeb2.Element(this.engine, childs[i]));
+                //this.children.push(new QWeb2.Element(this.engine, childs[i]));
+                var new_child = new QWeb2.Element(this.engine, childs[i]);
+                this.children.push(new_child);
+                new_child.parent_element = this;
             }
         }
         var attrs = this.node.attributes;
@@ -629,6 +632,24 @@ QWeb2.Element = (function() {
         compile_action_if : function(value) {
             this.top("if (" + (this.format_expression(value)) + ") {");
             this.bottom("}");
+            this.indent();
+            this.inside_if = true;
+        },
+        compile_action_elseif : function(value) {
+            if (!(this.parent_element && this.parent_element.inside_if)) {
+                return this.engine.tools.exception('elseif outside if');
+            }
+            this.dedent();
+            this.top("} else if (" + (this.format_expression(value)) + ") {");
+            this.indent();
+        },
+        compile_action_else : function(value) {
+            if (!(this.parent_element && this.parent_element.inside_if)) {
+                return this.engine.tools.exception('else outside if');
+            }
+            this.parent_element.inside_if = false;
+            this.dedent();
+            this.top("} else {");
             this.indent();
         },
         compile_action_foreach : function(value) {
